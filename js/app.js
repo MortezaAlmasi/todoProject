@@ -6,27 +6,29 @@ const input = document.querySelector(".input");
 const cancel = document.querySelector(".cancel");
 const create = document.querySelector(".create");
 const todosContainer = document.querySelector(".todos-container");
-openModalButton.addEventListener("click", function () {
-  modalShow();
-});
+openModalButton.addEventListener("click", toggleModal);
 
-create.addEventListener("click", function () {
-  todoSetUp();
+create.addEventListener("click", createTodo);
+input.addEventListener("keydown", function (e) {
+  if (e.key === "Enter") {
+    createTodo();
+  }
 });
-
-cancel.addEventListener("click", function () {
-  modalShow();
-});
-closeModalX.addEventListener("click", function () {
-  modalShow();
-});
+cancel.addEventListener("click", toggleModal);
+closeModalX.addEventListener("click", toggleModal);
 todosContainer.addEventListener("click", function (e) {
   const deleteButton = e.target.closest(".delete");
   if (deleteButton) {
     deleteButton.closest(".todo").remove();
   }
 });
-function todoSetUp() {
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Escape" && !modalScreen.classList.contains("hidden")) {
+    toggleModal();
+    input.value = "";
+  }
+});
+function createTodo() {
   if (input.value.trim() === "") {
     alert("لطفا عنوان تودو را پر کنید! :)");
     input.value = "";
@@ -34,9 +36,9 @@ function todoSetUp() {
     const todo = document.createElement("div");
     todo.classList.add("todo");
     const todoData = document.createElement("div");
-    todoData.classList.add(".todo-data");
+    todoData.classList.add("todo-data");
     const todoTitle = document.createElement("p");
-    todoTitle.classList.add(".todo-title");
+    todoTitle.classList.add("todo-title");
 
     const todoButtons = document.createElement("div");
     todoButtons.classList.add("todo-buttons");
@@ -52,6 +54,7 @@ function todoSetUp() {
     input.value = "";
   }
 }
-function modalShow() {
+function toggleModal() {
   modalScreen.classList.toggle("hidden");
+  input.value = "";
 }
