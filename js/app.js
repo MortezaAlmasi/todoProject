@@ -1,94 +1,114 @@
 const openModalButton = document.querySelector(".open-modal-button");
 const modalScreen = document.querySelector(".modal-screen");
-const modal = document.querySelector(".modal");
-const closeModalX = document.querySelector(".close-modal-x");
-const input = document.querySelector(".input");
-const cancel = document.querySelector(".cancel");
-const create = document.querySelector(".create");
+const closeModalButton = document.querySelector(".close-modal-x");
+const cancelButton = document.querySelector(".cancel");
+const createTodoButton = document.querySelector(".create");
+const todoInput = document.querySelector(".input");
 const todosContainer = document.querySelector(".todos-container");
-openModalButton.addEventListener("click", toggleModal);
-const todoDatas = JSON.parse(localStorage.getItem("todos") ?? "[]");
-console.log("ابتدای برنامه:", localStorage.getItem("todos"));
-for (let todoDataa of todoDatas) {
-  const todo = document.createElement("div");
-  todo.classList.add("todo");
-  todo.setAttribute("id", todoDataa.id);
-  const todoData = document.createElement("div");
-  todoData.classList.add("todo-data");
-  const todoTitle = document.createElement("p");
-  todoTitle.classList.add("todo-title");
 
-  const todoButtons = document.createElement("div");
-  todoButtons.classList.add("todo-buttons");
-  const todoRemoveButton = document.createElement("button");
-  todoRemoveButton.classList.add("delete");
-  todoRemoveButton.textContent = "حذف کردن";
-  todo.append(todoData, todoButtons);
-  todoData.append(todoTitle);
-  todoTitle.textContent = todoDataa.title;
-  todoButtons.append(todoRemoveButton);
-  todosContainer.append(todo);
-}
-create.addEventListener("click", createTodo);
-input.addEventListener("keydown", function (e) {
-  if (e.key === "Enter") {
+let todos = loadTodos();
+
+openModalButton.addEventListener("click", toggleModal);
+closeModalButton.addEventListener("click", toggleModal);
+cancelButton.addEventListener("click", toggleModal);
+
+createTodoButton.addEventListener("click", createTodo);
+
+todoInput.addEventListener("keydown", function (event) {
+  if (event.key === "Enter") {
     createTodo();
   }
 });
-cancel.addEventListener("click", toggleModal);
-closeModalX.addEventListener("click", toggleModal);
-todosContainer.addEventListener("click", function (e) {
-  const deleteButton = e.target.closest(".delete");
-  if (deleteButton) {
-    const todoId = Number(e.target.closest(".todo").id);
-    const foundId = todoDatas.findIndex(function (todoDataaa) {
-      return todoDataaa.id == todoId;
-    });
-    todoDatas.splice(foundId, 1);
-    localStorage.setItem("todos", JSON.stringify(todoDatas));
-    deleteButton.closest(".todo").remove();
-  }
-});
-document.addEventListener("keydown", function (e) {
-  if (e.key === "Escape" && !modalScreen.classList.contains("hidden")) {
-    toggleModal();
-    input.value = "";
-  }
-});
-function createTodo() {
-  if (input.value.trim() === "") {
-    alert("لطفا عنوان تودو را پر کنید! :)");
-    input.value = "";
-  } else {
-    todoDatas.push({
-      id: Math.floor(Math.random() * 1000),
-      title: input.value,
-    });
-    localStorage.setItem("todos", JSON.stringify(todoDatas));
-    console.log("بعد از ذخیره:", localStorage.getItem("todos"));
-    const todo = document.createElement("div");
-    todo.classList.add("todo");
-    todo.setAttribute("id", todoDatas[todoDatas.length - 1].id);
-    const todoData = document.createElement("div");
-    todoData.classList.add("todo-data");
-    const todoTitle = document.createElement("p");
-    todoTitle.classList.add("todo-title");
 
-    const todoButtons = document.createElement("div");
-    todoButtons.classList.add("todo-buttons");
-    const todoRemoveButton = document.createElement("button");
-    todoRemoveButton.classList.add("delete");
-    todoRemoveButton.textContent = "حذف کردن";
-    todo.append(todoData, todoButtons);
-    todoData.append(todoTitle);
-    todoTitle.textContent = input.value;
-    todoButtons.append(todoRemoveButton);
-    todosContainer.append(todo);
-    modalScreen.classList.add("hidden");
-    input.value = "";
+todosContainer.addEventListener("click", function (event) {
+  const deleteButton = event.target.closest(".delete");
+
+  if (!deleteButton) return;
+
+  const todoElement = deleteButton.closest(".todo");
+  const todoId = Number(todoElement.id);
+
+  deleteTodo(todoId);
+  todoElement.remove();
+});
+
+document.addEventListener("keydown", function (event) {
+  if (event.key === "Escape" && !modalScreen.classList.contains("hidden")) {
+    toggleModal();
+  }
+});
+
+function loadTodos() {
+  return JSON.parse(localStorage.getItem("todos") ?? "[]");
+}
+
+function saveTodos() {
+  localStorage.setItem("todos", JSON.stringify(todos));
+}
+
+function createTodo() {
+  const title = todoInput.value.trim();
+
+  if (!title) {
+    alert("لطفا عنوان تودو را پر کنید! :)");
+    return;
+  }
+
+  const newTodo = {
+    id: Date.now(),
+    title: title,
+  };
+
+  todos.push(newTodo);
+  saveTodos();
+
+  renderTodo(newTodo);
+
+  todoInput.value = "";
+  toggleModal();
+}
+
+function renderTodo(todo) {
+  const todoElement = document.createElement("div");
+  todoElement.classList.add("todo");
+  todoElement.id = todo.id;
+
+  const todoContent = document.createElement("div");
+  todoContent.classList.add("todo-data");
+
+  const todoTitle = document.createElement("p");
+  todoTitle.classList.add("todo-title");
+  todoTitle.textContent = todo.title;
+
+  const todoActions = document.createElement("div");
+  todoActions.classList.add("todo-buttons");
+
+  const deleteButton = document.createElement("button");
+  deleteButton.classList.add("delete");
+  deleteButton.textContent = "حذف کردن";
+
+  todoContent.append(todoTitle);
+  todoActions.append(deleteButton);
+
+  todoElement.append(todoContent, todoActions);
+
+  todosContainer.append(todoElement);
+}
+
+function deleteTodo(todoId) {
+  const todoIndex = todos.findIndex(function (todo) {
+    return todo.id === todoId;
+  });
+
+  if (todoIndex !== -1) {
+    todos.splice(todoIndex, 1);
+    saveTodos();
   }
 }
+
 function toggleModal() {
   modalScreen.classList.toggle("hidden");
-  input.value = "";
+  todoInput.value = "";
 }
+
+todos.forEach(renderTodo);
